@@ -1,5 +1,7 @@
 # RGB-D Multitask Tree Instance Segmentation and DBH Estimation
 
+Click https://claude.ai/code/artifact/b9360df3-0b0f-42de-bc88-667a56f85406 for more info
+
 This thesis investigates whether a single RGB-D deep learning model can simultaneously identify individual trees, classify their species, and estimate their diameter at breast height (DBH) from below-canopy imagery.
 
 The proposed approach extends MaskDINO with depth information and a multitask DBH estimation branch. Experiments evaluate the contribution of depth across multiple backbones, the cost of multitask learning on segmentation performance, and the factors limiting performance under distance and occlusion.
