@@ -1,4 +1,4 @@
-# RGB-D Multitask Tree Instance Segmentation and DBH Estimation
+# Multitask Learning for Tree Instance Segmentation and Diameter Estimation from RGB-D Imagery
 
 Click https://claude.ai/code/artifact/b9360df3-0b0f-42de-bc88-667a56f85406 for more info
 

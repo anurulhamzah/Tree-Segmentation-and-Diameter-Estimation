@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+type: software
+title: "Multitask Learning for Tree Instance Segmentation and Diameter Estimation from RGB-D Imagery in Agroforestry and Rainforest Environments (code)"
+authors:
+  - family-names: Nurulhamzah
+    given-names: Akhmad Fauzi
+    affiliation: Monash University Indonesia
+  - family-names: Saputra
+    given-names: Muhamad Risqi Utama
+    affiliation: Monash University Indonesia
+repository-code: "https://github.com/anurulhamzah/Tree-Segmentation-and-Diameter-Estimation"
+license: Apache-2.0
+preferred-citation:
+  type: article
+  title: "Multitask Learning for Tree Instance Segmentation and Diameter Estimation from RGB-D Imagery in Agroforestry and Rainforest Environments"
+  authors:
+    - family-names: Nurulhamzah
+      given-names: Akhmad Fauzi
+      affiliation: Monash University Indonesia
+    - family-names: Saputra
+      given-names: Muhamad Risqi Utama
+      affiliation: Monash University Indonesia
+  journal: "Ecological Informatics"
+  year: 2026
+  status: submitted

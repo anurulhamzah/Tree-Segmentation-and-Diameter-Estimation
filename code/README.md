@@ -1,8 +1,8 @@
-# Individual Tree Instance Segmentation and Diameter Estimation from Under-Canopy RGB-D Imagery
+# Multitask Learning for Tree Instance Segmentation and Diameter Estimation from RGB-D Imagery
 
-Code accompanying the thesis *"Individual Tree Instance Segmentation and Diameter Estimation from
-Under-Canopy RGB-D Imagery for Indonesian Agroforestry and Rainforest Species"* (Akhmad Fauzi
-Nurulhamzah, Monash University Indonesia). A single MaskDINO network with a four-channel RGB-D
+Code accompanying the paper *"Multitask Learning for Tree Instance Segmentation and Diameter
+Estimation from RGB-D Imagery in Agroforestry and Rainforest Environments"* (Akhmad Fauzi
+Nurulhamzah, Muhamad Risqi Utama Saputra; Monash University Indonesia). A single MaskDINO network with a four-channel RGB-D
 input jointly segments trees, identifies species, and regresses diameter at breast height (DBH)
 from a trunk-region head that reads backbone features directly.
 
@@ -42,6 +42,8 @@ env/                Conda environment specification
 Scripts assume a project layout of `<root>/tree_classification/{data,scripts,configs,reports}` and
 `<root>/MaskDINO/MaskDINO` for the backbone, mirroring the structure this code was developed in;
 adjust the path constants at the top of a script if your layout differs.
+
+This code is released as evidence of what was actually run, not as a plug-and-play package: most scripts and config files hardcode the absolute cluster paths used during development (e.g. `/scratch2/pr65/...`), and several fine-tuning configs point their `WEIGHTS` at a prior run's `model_final.pth`, which is not included here (see *Checkpoints* below). Reproducing a specific result means locating the corresponding config, retraining any prerequisite run it chains from, and editing the path constants to match your own layout.
 
 ## Data
 
@@ -84,8 +86,8 @@ with standard Detectron2 COCO instance evaluation.
 
 ```bibtex
 @article{nurulhamzah2026treesegdbh,
-  title   = {Individual Tree Instance Segmentation and Diameter Estimation from
-             Under-Canopy {RGB-D} Imagery for {I}ndonesian Agroforestry and Rainforest Species},
+  title   = {Multitask Learning for Tree Instance Segmentation and Diameter Estimation from
+             {RGB-D} Imagery in Agroforestry and Rainforest Environments},
   author  = {Nurulhamzah, Akhmad Fauzi and Saputra, Muhamad Risqi Utama},
   journal = {Ecological Informatics},
   year    = {2026},

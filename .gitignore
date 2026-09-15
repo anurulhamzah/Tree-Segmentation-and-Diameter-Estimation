@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Model weights and training artifacts (not distributed via this repository)
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+wandb/
+outputs/
+checkpoints/
+
+# Logs
+*.log
+
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/
