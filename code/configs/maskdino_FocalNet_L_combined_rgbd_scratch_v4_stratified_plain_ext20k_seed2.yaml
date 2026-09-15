@@ -1,0 +1,17 @@
+_BASE_: maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_plain_ext20k.yaml
+
+# ==========================================================================
+# VALIDASI MULTI-SEED — plain_ext20k_seed2 (SEED 3121 -> 9273)
+# --------------------------------------------------------------------------
+# IDENTIK dengan plain_ext20k (resume dari checkpoint plain135k YANG SAMA, LR
+# restart 4e-5 20k, TANPA mosaic/noobj/classweight) — SATU-SATUNYA beda: SEED.
+# Tujuan: plain_ext20k (seed asli) = test AP50 62,08%, +3,7 sigma di atas cluster
+# 4 run 155k (control/classweight x 2 seed, std 0,38pp). Keunggulannya jauh
+# melampaui noise band, TAPI baru 1 seed. Dijalankan berpasangan dgn
+# plain_ext20k_seed3 (SEED 5417) utk konfirmasi keunggulan itu robust lintas seed
+# (memperkuat rekomendasi backbone DBH), BUKAN kebetulan seed 3121.
+# SEED 9273 sengaja disamakan dgn classweight_20k_seed2/control20k_seed2 utk
+# konsistensi konvensi seed di seluruh eksperimen validasi.
+# ==========================================================================
+
+SEED: 9273

@@ -1,0 +1,15 @@
+_BASE_: maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_mosaic_classweight_20k.yaml
+
+# ==========================================================================
+# VALIDASI MULTI-SEED — classweight_20k_seed2
+# --------------------------------------------------------------------------
+# IDENTIK dengan classweight_20k (checkpoint awal noobj05_20k, PER_CLASS_WEIGHT
+# sama, LR/schedule sama) — SATU-SATUNYA beda: SEED diganti (3121 -> 9273).
+# Tujuan: gap classweight_20k vs control20k di val AP50 hanya 0,09pp (63,77%
+# vs 63,68%) — jauh di bawah noise level ±0,3-0,5pp yang teramati dari kurva
+# plateau plain135k. Dijalankan berpasangan dgn control20k_seed2 (SEED sama,
+# 9273) utk cek apakah urutan/selisih classweight>kontrol tetap konsisten di
+# seed berbeda, atau berbalik/menghilang (indikasi noise satu-run).
+# ==========================================================================
+
+SEED: 9273

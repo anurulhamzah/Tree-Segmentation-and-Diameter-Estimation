@@ -1,0 +1,4 @@
+Base commit these patches were developed against, from https://github.com/IDEA-Research/MaskDINO
+(the fork at https://github.com/anurulhamzah/MaskDINO tracks the same history):
+
+3831d8514a3728535ace8d4ecc7d28044c42dd14 (2023-12-20)

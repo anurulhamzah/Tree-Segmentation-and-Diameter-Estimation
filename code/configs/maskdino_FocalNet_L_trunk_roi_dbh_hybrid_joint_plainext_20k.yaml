@@ -1,0 +1,124 @@
+_BASE_: /scratch2/pr65/anur0018/MaskDINO/MaskDINO/configs/coco/instance-segmentation/Base-COCO-InstanceSegmentation.yaml
+
+# ==========================================================================
+# JOINT (seg + Trunk-ROI Hybrid DBH head) fine-tune — backbone TIDAK dibekukan.
+# Dijalankan via scripts/finetune_trunk_roi_dbh_hybrid_joint.py.
+# --------------------------------------------------------------------------
+# Init dari plain_ext20k (backbone segmentasi TERBAIK: test AP50=62,08%). Head DBH =
+# HybridTrunkROIDBHHead (kombinasi PEMENANG DBH Sandbox Fase C, test R²=0,757,
+# mean-per-species-R²=+0,136) — dipasang sbg submodule eksternal (bukan dbh_embed
+# bawaan decoder), dilatih JOINT dgn backbone unfrozen via forward-hook res2.
+#
+# dbh_embed BAWAAN dimatikan (DBH_WEIGHT: 0.0) supaya tidak ada 2 head DBH bentrok.
+# DBH_JOINT_WEIGHT (multiplier loss_dbh_trunkroi) diisi via --dbh-weight CLI, WAJIB
+# dikalibrasi smoke test dulu (skala beda dari kalibrasi dbh_embed lama, lihat header
+# skrip). Seg loss weights + solver settings IDENTIK dgn
+# maskdino_FocalNet_L_combined_rgbd_dbh_joint_plainext_20k.yaml (job 58470985) supaya
+# apple-to-apple, satu-satunya variabel beda = arsitektur head DBH.
+# ==========================================================================
+
+SEED: 3121
+
+MODEL:
+  META_ARCHITECTURE: "MaskDINO"
+  WEIGHTS: ""    # diisi via --model-weights (plain_ext20k/model_final.pth)
+  BACKBONE:
+    NAME: "D2FocalNet"
+  FOCAL:
+    modelname: "focalnet_L_384_22k"
+    out_features: ["res2", "res3", "res4", "res5"]
+    in_chans: 4
+  PIXEL_MEAN: [ 123.675, 116.280, 103.530, 118.1 ]
+  PIXEL_STD:  [ 58.395, 57.120, 57.375, 50.8 ]
+  SEM_SEG_HEAD:
+    NAME: "MaskDINOHead"
+    IGNORE_VALUE: 255
+    NUM_CLASSES: 13
+    LOSS_WEIGHT: 1.0
+    CONVS_DIM: 256
+    MASK_DIM: 256
+    NORM: "GN"
+    PIXEL_DECODER_NAME: "MaskDINOEncoder"
+    DIM_FEEDFORWARD: 2048
+    NUM_FEATURE_LEVELS: 4
+    TOTAL_NUM_FEATURE_LEVELS: 5
+    IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    COMMON_STRIDE: 4
+    TRANSFORMER_ENC_LAYERS: 6
+    FEATURE_ORDER: "low2high"
+  MaskDINO:
+    TRANSFORMER_DECODER_NAME: "MaskDINODecoder"
+    DEEP_SUPERVISION: True
+    NO_OBJECT_WEIGHT: 0.1
+    CLASS_WEIGHT: 4.0
+    MASK_WEIGHT: 5.0
+    DICE_WEIGHT: 5.0
+    BOX_WEIGHT: 5.0
+    GIOU_WEIGHT: 2.0
+    DBH_WEIGHT: 0.0        # dbh_embed BAWAAN dimatikan — head eksternal dipakai
+    HIDDEN_DIM: 256
+    NUM_OBJECT_QUERIES: 300
+    NHEADS: 8
+    DROPOUT: 0.0
+    DIM_FEEDFORWARD: 2048
+    ENC_LAYERS: 0
+    PRE_NORM: False
+    ENFORCE_INPUT_PROJ: False
+    SIZE_DIVISIBILITY: 32
+    DEC_LAYERS: 9
+    TRAIN_NUM_POINTS: 12544
+    OVERSAMPLE_RATIO: 3.0
+    IMPORTANCE_SAMPLE_RATIO: 0.75
+    EVAL_FLAG: 1
+    INITIAL_PRED: True
+    TWO_STAGE: True
+    DN: "seg"
+    DN_NUM: 100
+    INITIALIZE_BOX_TYPE: 'bitmask'
+    BOX_LOSS: True
+    TEST:
+      SEMANTIC_ON: False
+      INSTANCE_ON: True
+      PANOPTIC_ON: False
+      OVERLAP_THRESHOLD: 0.8
+      OBJECT_MASK_THRESHOLD: 0.25
+
+DATASETS:
+  TRAIN: ("combined_inst_rle_f1000_repaired_v4_stratified_train",)
+  TEST:  ("combined_inst_rle_f1000_repaired_v4_stratified_val",)
+
+INPUT:
+  IMAGE_SIZE: 640
+  MASK_FORMAT: "bitmask"
+  MIN_SCALE: 0.4
+  MAX_SCALE: 2.0
+  FORMAT: "RGB"
+  DATASET_MAPPER_NAME: "coco_instance_lsj_dbh"
+  USE_DEPTH: True
+  DEPTH_DIR: "/scratch2/pr65/anur0018/tree_classification/data/combined/depth_pfm"
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 2500
+  WEIGHT_DECAY: 0.05
+  OPTIMIZER: "ADAMW"
+  BACKBONE_MULTIPLIER: 1.0
+  CLIP_GRADIENTS:
+    ENABLED: True
+    CLIP_TYPE: "full_model"
+    CLIP_VALUE: 0.01
+    NORM_TYPE: 2.0
+  AMP:
+    ENABLED: False
+
+TEST:
+  EVAL_PERIOD: 2500
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

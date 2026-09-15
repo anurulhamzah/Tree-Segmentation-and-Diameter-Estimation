@@ -1,0 +1,15 @@
+# EKSPERIMEN SINGLE-SHOT (Varian B — ablasi, DENGAN class-weight)
+# ---------------------------------------------------------------------------
+# Identik Varian A + PER_CLASS_WEIGHT tervalidasi (13 nilai sqrt-inverse-freq yang
+# SAMA PERSIS dgn staged classweight_20k — JANGAN mengarang formula baru).
+# Tujuan: uji apakah class-weight membantu di rezim from-scratch single-shot
+# (di rezim staged, kontribusinya ke F1 cuma 6%).
+# Dilatih via train_combined_classweight.py (menimpa criterion.empty_weight[:13]).
+#
+# Urutan bobot = urutan kategori 1..13:
+#   Apple Lemon Loquat Mango Orange Persimmon Pomegranate
+#   AliiFig BangaloPalm Fern LeechVine RubberFig Umbrella
+_BASE_: maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_singleshot75k_mosaic_noobj.yaml
+MODEL:
+  MaskDINO:
+    PER_CLASS_WEIGHT: [0.709, 1.854, 1.023, 1.803, 0.578, 1.850, 2.465, 0.522, 0.293, 0.571, 0.443, 0.460, 0.429]

@@ -1,0 +1,29 @@
+_BASE_: maskdino_FocalNet_L_combined_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k.yaml
+
+# ==========================================================================
+# ISOLASI noobj_only_20k — finetune 20k dari baseline 75k, HANYA turunkan
+# NO_OBJECT_WEIGHT 0.1->0.05, TANPA mosaic sama sekali.
+# --------------------------------------------------------------------------
+# Tujuan ilmiah: melengkapi matriks faktorial 2x2 (mosaic x noobj) di Tahap 1.
+# Sel yang sudah ada: baseline (mosaic=off,noobj=0.1)=57.18%; ft20k
+# (mosaic=0.5,noobj=0.1, 95k, blm dites); ext20k (mosaic=0.75,noobj=0.1, 115k,
+# blm dites); noobj05_20k (mosaic=0.5,noobj=0.05, 135k)=60.02%. Satu-satunya
+# sel kosong: mosaic=off, noobj=0.05 — persis config ini.
+#
+# Init dari model_final.pth 75k baseline (val AP50=60.69%, test AP50=57.18%) —
+# SAMA PERSIS titik awal ft20k, bedanya HANYA lever mosaic vs noobj yang diubah.
+# ==========================================================================
+
+MODEL:
+  WEIGHTS: "/scratch2/pr65/anur0018/maskdino_output/FocalNet_L_combined_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k/model_final.pth"
+  MaskDINO:
+    NO_OBJECT_WEIGHT: 0.05
+
+SOLVER:
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000

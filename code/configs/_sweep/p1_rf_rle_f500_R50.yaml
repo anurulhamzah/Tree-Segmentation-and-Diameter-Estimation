@@ -1,0 +1,5 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/_sweep/p1_rf_f500_R50.yaml
+
+DATASETS:
+  TRAIN: ("rainforests_inst_rle_f500_train",)
+  TEST:  ("rainforests_inst_rle_f500_val",)

@@ -1,0 +1,53 @@
+_BASE_: /scratch2/pr65/anur0018/MaskDINO/MaskDINO/configs/coco/instance-segmentation/maskdino_R50_bs16_50ep_3s.yaml
+
+# R50 Combined RGBD 75k — FROM SCRATCH (tanpa ImageNet), depth channel SAJA (tanpa DBH head)
+# Permintaan pembimbing: fresh training hanya dengan data kita (random init, no pretrained).
+# Baseline CNN dari-nol untuk pembanding SwinB scratch.
+#   - MODEL.WEIGHTS: "" (random init)
+#   - 4-ch stem otomatis: detectron2 bikin conv1 4-channel karena len(PIXEL_MEAN)==4
+#   - SOLVER.BACKBONE_MULTIPLIER: 1.0 (backbone belajar penuh)
+#   - WARMUP_ITERS: 2000 (from-scratch)
+#   - DBH_WEIGHT: 0.0 (RGBD saja, tanpa DBH head)
+
+SEED: 3121
+
+MODEL:
+  WEIGHTS: ""
+  PIXEL_MEAN: [ 123.675, 116.280, 103.530, 118.1 ]
+  PIXEL_STD: [ 58.395, 57.120, 57.375, 50.8 ]
+  SEM_SEG_HEAD:
+    NUM_CLASSES: 13
+  MaskDINO:
+    DBH_WEIGHT: 0.0
+
+DATASETS:
+  TRAIN: ("combined_inst_rle_f1000_repaired_train",)
+  TEST:  ("combined_inst_rle_f1000_repaired_val",)
+
+INPUT:
+  IMAGE_SIZE: 640
+  MIN_SCALE: 0.4
+  MAX_SCALE: 2.0
+  FORMAT: "RGB"
+  MASK_FORMAT: "bitmask"
+  DATASET_MAPPER_NAME: "coco_instance_lsj_dbh"
+  USE_DEPTH: True
+  DEPTH_DIR: "/scratch2/pr65/anur0018/tree_classification/data/combined/depth_pfm"
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.0001
+  MAX_ITER: 75000
+  STEPS: (60000, 70000)
+  WARMUP_ITERS: 5000
+  BACKBONE_MULTIPLIER: 1.0
+  CHECKPOINT_PERIOD: 5000
+  AMP:
+    ENABLED: False   # from-scratch: fp32 untuk hindari NaN (crash AMP @iter292)
+
+TEST:
+  EVAL_PERIOD: 5000
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

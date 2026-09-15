@@ -1,0 +1,22 @@
+_BASE_: maskdino_FocalNet_B_combined_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k.yaml
+
+# ==========================================================================
+# KONTROL base-plain-155k — FocalNet-B, FROM SCRATCH, RGBD, PLAIN, retrain
+# PENUH dari iterasi 0. Analog persis dengan
+# maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_plain155k.yaml,
+# satu-satunya beda adalah backbone (B, bukan L) via _BASE_.
+# --------------------------------------------------------------------------
+# Dibuat 20 Agt 2026 sebagai basis untuk eksperimen detach-backbone varian
+# FocalNet-B (bandingkan train_joint_scratch_11sp_155k_cap30_detach.slurm,
+# yang memakai FocalNet-L). Alasan: FocalNet-B dan FocalNet-L ternyata SETARA
+# secara statistik di ablasi RGBD-scratch 75k Table 2 (val AP50 61,02 vs
+# 60,69, selisih <1pp, di dalam noise floor run-to-run ±5pp yang ditetapkan
+# di Section 3.5 naskah) — bukan bukti B lebih baik, tapi cukup dekat untuk
+# layak diuji sebagai titik data tambahan pada eksperimen detach-backbone.
+# STEPS diskalakan proporsional sama seperti versi L (60000/70000 dari basis
+# 75k -> 124000/144667 untuk 155k).
+# ==========================================================================
+
+SOLVER:
+  MAX_ITER: 155000
+  STEPS: (124000, 144667)

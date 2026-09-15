@@ -1,0 +1,32 @@
+_BASE_: maskdino_FocalNet_L_combined_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k.yaml
+
+# ==========================================================================
+# KONTROL plain_ext20k — lanjutan dari plain135k (135k iter, TANPA mosaic/noobj/
+# classweight), diberi LR RESTART 20k iter TANPA menambah konten baru apa pun
+# (masih tanpa mosaic, tanpa NO_OBJECT_WEIGHT diturunkan, tanpa PER_CLASS_WEIGHT).
+# --------------------------------------------------------------------------
+# Tujuan ilmiah: mengisolasi efek "LR restart itu sendiri" dari efek "konten baru
+# yang dibawa restart" (mosaic/noobj/classweight). Semua tahap staged (ft20k,
+# ext20k, noobj05_20k, classweight_20k, control20k) SELALU membundel LR restart
+# DENGAN konten baru — jadi belum pernah diuji terpisah.
+#
+# plain135k (135k, tanpa restart sama sekali) sudah plateau (val AP50 63,6-64,1%
+# sejak iter~110k) dan SUDAH melampaui val AP50 classweight_20k/control20k (155k,
+# dengan restart) — 64,14% vs 63,77%/63,68%. Pertanyaan yang dijawab di sini:
+# apakah restart LR 20k lanjutan (tanpa tambahan apa pun) mengubah gambaran itu
+# (mis. mendorong plain lebih tinggi lagi, atau malah stagnan/turun)?
+#
+# Init dari model_final.pth plain135k (val AP50=64,14%, test AP50=60,57%).
+# ==========================================================================
+
+MODEL:
+  WEIGHTS: "/scratch2/pr65/anur0018/maskdino_output/FocalNet_L_combined_rgbd_scratch_v4_stratified_plain135k/model_final.pth"
+
+SOLVER:
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000

@@ -1,0 +1,73 @@
+_BASE_: /scratch2/pr65/anur0018/conda_envs/maskdino/lib/python3.9/site-packages/detectron2/model_zoo/configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml
+
+# Mask R-CNN R50-FPN + RGBD + DBH, FROM SCRATCH, 155k iterasi, max_depth=30m, DETACH-BACKBONE —
+# menggantikan maskrcnn_R50_combined_rle_f1000_rgbd_dbh_scratch_v4_stratified_155k_cap30.yaml
+# (dihapus 25 Agt 2026, dua bug: (1) field anotasi "dbh" dalam cm dipakai langsung sbg mm tanpa
+# dikali 10 -- head belajar pada skala 10x terlalu kecil; (2) anotasi RubberFig ekstrem [GT sampai
+# 754cm] tidak difilter, merusak RMSE test dari ~81mm ke 404mm. Kedua bug sudah diperbaiki di
+# dataset_mapper.py, berlaku otomatis di config ini juga).
+#
+# DETACH_BACKBONE=True ditambahkan mengikuti temuan --detach-dbh-backbone di pipeline
+# FocalNet-L/Swin-L (seg +1.17pp, RMSE -3.81mm vs joint-biasa, protokol sama) -- stop-gradient
+# loss_dbh sebelum backbone/FPN via ROI_DBH_HEAD.DETACH_BACKBONE (roi_heads.py::_forward_dbh).
+# Backbone tetap dilatih penuh oleh loss segmentasi/box/mask.
+#
+# CATATAN JUJUR soal komparabilitas (sama seperti config lama):
+#  - Head DBH beda desain total dari model final: DBHROIHeads (regresi ROI-pooled, detach) vs
+#    HybridTrunkROIDBHHead (regresi geometris trunk-row + korkesi jaringan, detach). Perbandingan
+#    ini menjawab "arsitektur mana yang lebih baik pada protokol yang sama", BUKAN "head DBH mana
+#    yang lebih baik pada arsitektur yang sama".
+#  - Filter jarak DBH di sini kasar (median mask, bukan breast-height row) — kemungkinan
+#    memasukkan/mengeluarkan instance yang sedikit berbeda dari populasi evaluasi model final
+#    di N yang sama persis. Laporkan N aktual saat eval, jangan asumsikan sama dgn N=1790.
+#  - Augmentasi ResizeShortestEdge klasik (bukan replikasi LSJ 640 MaskDINO persis) — sama
+#    seperti semua pasangan Mask R-CNN lain di studi ini.
+#  - AMP DIMATIKAN + WARMUP 5000 — replikasi mitigasi NaN yang sudah terbukti wajib utk
+#    MaskDINO/Mask R-CNN from-scratch di studi ini ([[project-fromscratch-rgbd-amp-nan]]).
+#  - BELUM PERNAH DIJALANKAN DI GPU — smoke test WAJIB sebelum full run.
+
+MODEL:
+  WEIGHTS: ""
+  PIXEL_MEAN: [123.675, 116.280, 103.530, 118.1]
+  PIXEL_STD:  [58.395, 57.120, 57.375, 50.8]
+  BACKBONE:
+    FREEZE_AT: 0
+  RESNETS:
+    NORM: "GN"
+  ROI_HEADS:
+    NAME: "DBHROIHeads"
+    NUM_CLASSES: 13
+  ROI_DBH_HEAD:
+    POOLER_RESOLUTION: 7
+    NUM_FC: 2
+    FC_DIM: 1024
+    LOSS_WEIGHT: 0.5
+    DETACH_BACKBONE: True
+
+DATASETS:
+  TRAIN: ("combined_inst_rle_f1000_repaired_v4_stratified_train",)
+  TEST:  ("combined_inst_rle_f1000_repaired_v4_stratified_val",)
+
+INPUT:
+  FORMAT: "RGB"
+  MASK_FORMAT: "bitmask"
+  USE_DEPTH: True
+  DEPTH_DIR: "/scratch2/pr65/anur0018/tree_classification/data/combined/depth_pfm"
+  DBH_MAX_DEPTH: 30.0
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.005
+  MAX_ITER: 155000
+  STEPS: (124000, 144667)
+  WARMUP_ITERS: 5000
+  CHECKPOINT_PERIOD: 5000
+  AMP:
+    ENABLED: False   # from-scratch: fp32 untuk hindari NaN
+
+TEST:
+  EVAL_PERIOD: 5000
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

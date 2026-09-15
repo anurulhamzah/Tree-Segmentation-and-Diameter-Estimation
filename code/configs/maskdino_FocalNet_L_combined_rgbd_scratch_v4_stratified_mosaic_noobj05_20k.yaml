@@ -1,0 +1,18 @@
+# Stage 3/3 — Finetune dari EXT20k: turunkan NO_OBJECT_WEIGHT 0.1->0.05 (lawan under-detection
+# langsung) + mosaic 0.5. Terbukti clean win di dataset lama: F1 61.1->62.5, recall 53.7->56.0,
+# TANPA trade-off precision.
+_BASE_: maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_mosaic_ext20k.yaml
+MODEL:
+  WEIGHTS: "/scratch2/pr65/anur0018/maskdino_output/FocalNet_L_combined_rgbd_scratch_v4_stratified_mosaic_ext20k/model_final.pth"
+  MaskDINO:
+    NO_OBJECT_WEIGHT: 0.05
+INPUT:
+  MOSAIC_PROB: 0.5
+SOLVER:
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000

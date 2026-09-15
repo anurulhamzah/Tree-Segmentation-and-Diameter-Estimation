@@ -1,0 +1,23 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/maskdino_SwinT_plantations.yaml
+
+MODEL:
+  SEM_SEG_HEAD:
+    NUM_CLASSES: 7
+
+DATASETS:
+  TRAIN: ("plantations_inst_rle_f1000_train",)
+  TEST:  ("plantations_inst_rle_f1000_val",)
+
+INPUT:
+  IMAGE_SIZE: 640
+  MASK_FORMAT: "bitmask"
+
+SOLVER:
+  BASE_LR: 3e-05
+  MAX_ITER: 5000
+  STEPS: (3500, 4750)
+  WARMUP_ITERS: 200
+  CHECKPOINT_PERIOD: 5000
+
+TEST:
+  EVAL_PERIOD: 5000

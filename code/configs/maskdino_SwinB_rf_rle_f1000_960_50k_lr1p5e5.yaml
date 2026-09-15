@@ -1,0 +1,21 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/maskdino_SwinB_rf_f1000.yaml
+
+DATASETS:
+  TRAIN: ("rainforests_inst_rle_f1000_960_train",)
+  TEST:  ("rainforests_inst_rle_f1000_960_val",)
+
+INPUT:
+  IMAGE_SIZE: 1024
+  MIN_SCALE: 0.1
+  MAX_SCALE: 2.0
+
+SOLVER:
+  IMS_PER_BATCH: 2
+  BASE_LR: 0.000015
+  MAX_ITER: 50000
+  STEPS: (40000, 47000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+
+TEST:
+  EVAL_PERIOD: 5000

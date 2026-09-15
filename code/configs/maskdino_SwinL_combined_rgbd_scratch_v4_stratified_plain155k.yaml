@@ -1,0 +1,15 @@
+_BASE_: maskdino_SwinL_combined_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k.yaml
+
+# ==========================================================================
+# KONTROL base-plain-155k — Swin-L, FROM SCRATCH, RGBD, PLAIN, retrain PENUH
+# dari iterasi 0. Analog persis dgn maskdino_FocalNet_B_combined_rgbd_scratch_
+# v4_stratified_plain155k.yaml dan versi FocalNet-L-nya — basis untuk
+# eksperimen joint seg+TrunkROI-DBH (finetune_trunk_roi_dbh_hybrid_joint.py).
+# Dibuat 23 Agt 2026 utk melengkapi keluarga Swin di komparasi joint 155k
+# cap30 vs model final (FocalNet-L). STEPS diskalakan proporsional sama
+# seperti versi lain (60000/70000 dari basis 75k -> 124000/144667 utk 155k).
+# ==========================================================================
+
+SOLVER:
+  MAX_ITER: 155000
+  STEPS: (124000, 144667)

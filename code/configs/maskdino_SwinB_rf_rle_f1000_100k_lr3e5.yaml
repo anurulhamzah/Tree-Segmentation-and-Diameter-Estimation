@@ -1,0 +1,10 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/maskdino_SwinB_rf_f1000.yaml
+
+SOLVER:
+  MAX_ITER: 100000
+  STEPS: (80000, 93000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+
+TEST:
+  EVAL_PERIOD: 5000

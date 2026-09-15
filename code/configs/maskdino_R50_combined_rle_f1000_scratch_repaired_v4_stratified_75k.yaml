@@ -1,0 +1,11 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/maskdino_R50_combined_rle_f1000_repaired_v4_stratified_75k.yaml
+
+# R50 Combined Scratch Repaired V4 75k — TANPA pretrained backbone
+# Identik dengan R50 Combined V4 stratified kecuali WEIGHTS="" (from-scratch)
+# Warmup dinaikkan 200→1000 untuk stabilitas tanpa pretrained weights
+
+MODEL:
+  WEIGHTS: ""
+
+SOLVER:
+  WARMUP_ITERS: 1000

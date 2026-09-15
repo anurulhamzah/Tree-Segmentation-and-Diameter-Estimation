@@ -1,0 +1,14 @@
+# SwinB Combined RGBD scratch repaired — MOSAIC crowd-aug FINETUNE dari model_final (best=final 75k).
+_BASE_: maskdino_SwinB_combined_rle_f1000_rgbd_scratch_repaired_75k.yaml
+MODEL:
+  WEIGHTS: "/scratch2/pr65/anur0018/maskdino_output/SwinB_combined_rle_f1000_rgbd_scratch_repaired_75k/model_final.pth"
+INPUT:
+  MOSAIC_PROB: 0.5
+SOLVER:
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000

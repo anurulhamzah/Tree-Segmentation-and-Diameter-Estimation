@@ -1,0 +1,12 @@
+_BASE_: maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_mosaic_control20k.yaml
+
+# ==========================================================================
+# VALIDASI MULTI-SEED — control20k_seed2
+# --------------------------------------------------------------------------
+# IDENTIK dengan control20k (checkpoint awal noobj05_20k, TANPA PER_CLASS_WEIGHT,
+# LR/schedule sama) — SATU-SATUNYA beda: SEED diganti (3121 -> 9273), SAMA
+# PERSIS dgn classweight_20k_seed2 supaya perbandingan tetap adil (seed sama,
+# hanya PER_CLASS_WEIGHT yg beda antar pasangan ini).
+# ==========================================================================
+
+SEED: 9273

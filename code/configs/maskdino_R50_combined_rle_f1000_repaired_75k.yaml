@@ -1,0 +1,38 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/maskdino_R50_rainforests.yaml
+
+# R50 Combined Repaired 75k — RGB Pretrain, dataset GT-fixed (repaired COCO annotations)
+# Identik dengan R50 Combined original (40.61%) kecuali dataset: combined_inst_rle_f1000_repaired
+# Ref: SwinT Combined Repaired +2.86pp, SwinT RGBD Scratch Repaired +3.97pp vs original
+
+DATASETS:
+  TRAIN: ("combined_inst_rle_f1000_repaired_train",)
+  TEST:  ("combined_inst_rle_f1000_repaired_val",)
+
+MODEL:
+  SEM_SEG_HEAD:
+    NUM_CLASSES: 13
+
+INPUT:
+  IMAGE_SIZE: 640
+  MIN_SCALE: 0.4
+  MAX_SCALE: 2.0
+  FORMAT: "RGB"
+  DATASET_MAPPER_NAME: "coco_instance_lsj"
+  MASK_FORMAT: "bitmask"
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.0001
+  MAX_ITER: 75000
+  STEPS: (60000, 70000)
+  WARMUP_ITERS: 200
+  CHECKPOINT_PERIOD: 5000
+  AMP:
+    ENABLED: True
+
+TEST:
+  EVAL_PERIOD: 5000
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

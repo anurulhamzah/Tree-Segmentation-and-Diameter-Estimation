@@ -1,0 +1,114 @@
+_BASE_: /scratch2/pr65/anur0018/MaskDINO/MaskDINO/configs/coco/instance-segmentation/Base-COCO-InstanceSegmentation.yaml
+
+# SwinT Combined RGB Pretrained 75k — dataset V4 stratified
+# Identik dengan SwinT Combined repaired 75k kecuali:
+#   - Dataset: repaired_v4 + stratified split (0 scene overlap)
+# WEIGHTS: swin_tiny_patch4_window7_224 pretrained, BACKBONE_MULTIPLIER=0.1, AMP=True
+
+SEED: 3121
+
+MODEL:
+  META_ARCHITECTURE: "MaskDINO"
+  WEIGHTS: "/scratch2/pr65/anur0018/pretrained_weights/swin_tiny_patch4_window7_224.pkl"
+  BACKBONE:
+    NAME: "D2SwinTransformer"
+  SWIN:
+    EMBED_DIM: 96
+    DEPTHS: [ 2, 2, 6, 2 ]
+    NUM_HEADS: [ 3, 6, 12, 24 ]
+    WINDOW_SIZE: 7
+    APE: False
+    DROP_PATH_RATE: 0.2
+    PATCH_NORM: True
+    PRETRAIN_IMG_SIZE: 224
+  PIXEL_MEAN: [ 123.675, 116.280, 103.530 ]
+  PIXEL_STD: [ 58.395, 57.120, 57.375 ]
+  SEM_SEG_HEAD:
+    NAME: "MaskDINOHead"
+    IGNORE_VALUE: 255
+    NUM_CLASSES: 13
+    LOSS_WEIGHT: 1.0
+    CONVS_DIM: 256
+    MASK_DIM: 256
+    NORM: "GN"
+    PIXEL_DECODER_NAME: "MaskDINOEncoder"
+    DIM_FEEDFORWARD: 2048
+    NUM_FEATURE_LEVELS: 4
+    TOTAL_NUM_FEATURE_LEVELS: 5
+    IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    COMMON_STRIDE: 4
+    TRANSFORMER_ENC_LAYERS: 6
+    FEATURE_ORDER: "low2high"
+  MaskDINO:
+    TRANSFORMER_DECODER_NAME: "MaskDINODecoder"
+    DEEP_SUPERVISION: True
+    NO_OBJECT_WEIGHT: 0.1
+    CLASS_WEIGHT: 4.0
+    MASK_WEIGHT: 5.0
+    DICE_WEIGHT: 5.0
+    BOX_WEIGHT: 5.0
+    GIOU_WEIGHT: 2.0
+    HIDDEN_DIM: 256
+    NUM_OBJECT_QUERIES: 300
+    NHEADS: 8
+    DROPOUT: 0.0
+    DIM_FEEDFORWARD: 2048
+    ENC_LAYERS: 0
+    PRE_NORM: False
+    ENFORCE_INPUT_PROJ: False
+    SIZE_DIVISIBILITY: 32
+    DEC_LAYERS: 9
+    TRAIN_NUM_POINTS: 12544
+    OVERSAMPLE_RATIO: 3.0
+    IMPORTANCE_SAMPLE_RATIO: 0.75
+    EVAL_FLAG: 1
+    INITIAL_PRED: True
+    TWO_STAGE: True
+    DN: "seg"
+    DN_NUM: 100
+    INITIALIZE_BOX_TYPE: 'bitmask'
+    BOX_LOSS: True
+    TEST:
+      SEMANTIC_ON: False
+      INSTANCE_ON: True
+      PANOPTIC_ON: False
+      OVERLAP_THRESHOLD: 0.8
+      OBJECT_MASK_THRESHOLD: 0.25
+
+DATASETS:
+  TRAIN: ("combined_inst_rle_f1000_repaired_v4_stratified_train",)
+  TEST:  ("combined_inst_rle_f1000_repaired_v4_stratified_val",)
+
+INPUT:
+  IMAGE_SIZE: 640
+  MASK_FORMAT: "bitmask"
+  MIN_SCALE: 0.4
+  MAX_SCALE: 2.0
+  FORMAT: "RGB"
+  DATASET_MAPPER_NAME: "coco_instance_lsj"
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.00005
+  MAX_ITER: 75000
+  STEPS: (60000, 70000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+  WEIGHT_DECAY: 0.05
+  OPTIMIZER: "ADAMW"
+  BACKBONE_MULTIPLIER: 0.1
+  CLIP_GRADIENTS:
+    ENABLED: True
+    CLIP_TYPE: "full_model"
+    CLIP_VALUE: 0.01
+    NORM_TYPE: 2.0
+  AMP:
+    ENABLED: True
+
+TEST:
+  EVAL_PERIOD: 5000
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

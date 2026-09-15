@@ -1,0 +1,124 @@
+_BASE_: /scratch2/pr65/anur0018/MaskDINO/MaskDINO/configs/coco/instance-segmentation/Base-COCO-InstanceSegmentation.yaml
+
+# SwinB Combined RGBD 75k — WARM-START (stem-inflated 3->4ch) + anotasi REPAIRED (union COCO+semantic)
+# Stem: conv input 4ch DI-LOAD (RGB pretrained di-copy, depth=mean(RGB)) — bukan di-drop/random.
+#   Cek sukses: di log TIDAK ada "patch_embed.proj.weight will not be loaded".
+#   Checkpoint stem dibuat: scripts/inflate_stem_rgbd.py (--init mean --in-chans 4).
+# Anotasi: combined_inst_rle_f1000_REPAIRED (filtered_rle_f1000_repaired) — perbaikan under-annotation
+#   (batang/cabang dimasukkan kembali) untuk menyerang recall rendah.
+# Pembanding ADIL ada di keluarga repaired juga (TRAIN+TEST = repaired):
+#   - SwinT/SwinB/R50 Combined RGBD-scratch REPAIRED (running) ← banding utama
+#   CATATAN: AP50 di repaired_val TIDAK comparable dgn laporan 26-model (yang pakai val normal).
+# Hyperparams identik gaya pretrained: AMP on, warmup 1000, bbmult 0.1, LR 4e-5, steps 60k/70k.
+
+SEED: 3121
+
+MODEL:
+  META_ARCHITECTURE: "MaskDINO"
+  BACKBONE:
+    NAME: "D2SwinTransformer"
+  SWIN:
+    EMBED_DIM: 128
+    DEPTHS: [ 2, 2, 18, 2 ]
+    NUM_HEADS: [ 4, 8, 16, 32 ]
+    WINDOW_SIZE: 12
+    APE: False
+    DROP_PATH_RATE: 0.3
+    PATCH_NORM: True
+    PRETRAIN_IMG_SIZE: 384
+    IN_CHANS: 4
+  WEIGHTS: "/scratch2/pr65/anur0018/pretrained_weights/swin_base_patch4_window12_384_22k_rgbd_inflated.pkl"
+  PIXEL_MEAN: [ 123.675, 116.280, 103.530, 118.1 ]
+  PIXEL_STD: [ 58.395, 57.120, 57.375, 50.8 ]
+  SEM_SEG_HEAD:
+    NAME: "MaskDINOHead"
+    IGNORE_VALUE: 255
+    NUM_CLASSES: 13
+    LOSS_WEIGHT: 1.0
+    CONVS_DIM: 256
+    MASK_DIM: 256
+    NORM: "GN"
+    PIXEL_DECODER_NAME: "MaskDINOEncoder"
+    DIM_FEEDFORWARD: 2048
+    NUM_FEATURE_LEVELS: 4
+    TOTAL_NUM_FEATURE_LEVELS: 5
+    IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    COMMON_STRIDE: 4
+    TRANSFORMER_ENC_LAYERS: 6
+    FEATURE_ORDER: "low2high"
+  MaskDINO:
+    TRANSFORMER_DECODER_NAME: "MaskDINODecoder"
+    DEEP_SUPERVISION: True
+    NO_OBJECT_WEIGHT: 0.1
+    CLASS_WEIGHT: 4.0
+    MASK_WEIGHT: 5.0
+    DICE_WEIGHT: 5.0
+    BOX_WEIGHT: 5.0
+    GIOU_WEIGHT: 2.0
+    DBH_WEIGHT: 0.0
+    HIDDEN_DIM: 256
+    NUM_OBJECT_QUERIES: 300
+    NHEADS: 8
+    DROPOUT: 0.0
+    DIM_FEEDFORWARD: 2048
+    ENC_LAYERS: 0
+    PRE_NORM: False
+    ENFORCE_INPUT_PROJ: False
+    SIZE_DIVISIBILITY: 32
+    DEC_LAYERS: 9
+    TRAIN_NUM_POINTS: 12544
+    OVERSAMPLE_RATIO: 3.0
+    IMPORTANCE_SAMPLE_RATIO: 0.75
+    EVAL_FLAG: 1
+    INITIAL_PRED: True
+    TWO_STAGE: True
+    DN: "seg"
+    DN_NUM: 100
+    INITIALIZE_BOX_TYPE: 'bitmask'
+    BOX_LOSS: True
+    TEST:
+      SEMANTIC_ON: False
+      INSTANCE_ON: True
+      PANOPTIC_ON: False
+      OVERLAP_THRESHOLD: 0.8
+      OBJECT_MASK_THRESHOLD: 0.25
+
+DATASETS:
+  TRAIN: ("combined_inst_rle_f1000_repaired_train",)
+  TEST:  ("combined_inst_rle_f1000_repaired_val",)
+
+INPUT:
+  IMAGE_SIZE: 640
+  MASK_FORMAT: "bitmask"
+  MIN_SCALE: 0.4
+  MAX_SCALE: 2.0
+  FORMAT: "RGB"
+  DATASET_MAPPER_NAME: "coco_instance_lsj_dbh"
+  USE_DEPTH: True
+  DEPTH_DIR: "/scratch2/pr65/anur0018/tree_classification/data/combined/depth_pfm"
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.00004
+  MAX_ITER: 75000
+  STEPS: (60000, 70000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+  WEIGHT_DECAY: 0.05
+  OPTIMIZER: "ADAMW"
+  BACKBONE_MULTIPLIER: 0.1
+  CLIP_GRADIENTS:
+    ENABLED: True
+    CLIP_TYPE: "full_model"
+    CLIP_VALUE: 0.01
+    NORM_TYPE: 2.0
+  AMP:
+    ENABLED: True
+
+TEST:
+  EVAL_PERIOD: 5000
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

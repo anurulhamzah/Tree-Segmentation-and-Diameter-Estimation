@@ -1,0 +1,46 @@
+_BASE_: maskdino_FocalNet_L_rf_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k.yaml
+
+# ==========================================================================
+# FocalNet-L Rainforest RGBD @960 — FROM SCRATCH (uji bottleneck resolusi)
+# --------------------------------------------------------------------------
+# Menguji apakah resolusi input lebih tinggi (source 960x540, proses 1024) memecah
+# bottleneck recall objek-kecil/kanopi-padat di rainforest. FocalNet-L @960 BELUM
+# PERNAH dilakukan (sebelumnya hanya SwinB/SwinT @960 RGB-pretrained 50k).
+#
+# Diturunkan dari baseline @480 (FocalNet-L RF RGBD scratch v4-stratified) — mewarisi
+# WEIGHTS='', in_chans=4, NUM_CLASSES=6, warmup=5000, AMP off, backbone_mult=1.0.
+# Perbedaan HANYA pada resolusi + akomodasi memorinya:
+#   - DATASETS  -> anotasi 960 (rainforests_inst_rle_f1000_960)
+#   - IMAGE_SIZE 640 -> 960 (= resolusi native source 960x540; lebar penuh muat pada scale 1.0)
+#   - MIN_SCALE 0.4 -> 0.1 (ikut resep SwinB rf@960)
+#   - DEPTH_DIR -> depth_960 (di-upsample 2x dari 480x270, lihat scripts/upsample_rf_depth_960.py)
+#   - IMAGE_SIZE 640 -> 896 (bukan 960: batch2@960 OOM; batch1@960 undertraining 5x lambat)
+#   - IMS_PER_BATCH 4 -> 2 (896 muat batch2 di L40S 44GB, ~39GB peak)
+#   - BASE_LR 1e-4 -> 5e-5 (linear scaling utk batch 2)
+# CATATAN (3 percobaan sebelumnya): (1) 1024 batch2 OOM; (2) 960 batch2 OOM ~0.1GB di atas batas
+# (crash intermiten iter24); (3) 960 batch1 LR2.5e-5 JALAN tapi undertraining ~5x lebih lambat dari
+# baseline RF@480 (val AP50 hanya 7% @25k vs 34.68% RF@480) -> batch-1 melumpuhkan from-scratch.
+# SOLUSI FINAL (pilihan user): 896 batch2 -> dinamika training sehat spt baseline, resolusi ~1.4x >640.
+#
+# CAVEAT komparasi: anotasi 960 = filtered_rle_f1000_960 (BUKAN repaired_v4_stratified
+# spt baseline @480; varian v4 @960 belum ada). Jadi @960-vs-@480 belum single-variable
+# murni (beda resolusi + versi-anotasi + batch). Untuk ablasi resolusi bersih, perlu
+# generate anotasi v4_stratified_960 lebih dulu.
+# ==========================================================================
+
+DATASETS:
+  TRAIN: ("rainforests_inst_rle_f1000_960_train",)
+  TEST:  ("rainforests_inst_rle_f1000_960_val",)
+
+INPUT:
+  IMAGE_SIZE: 896
+  MIN_SCALE: 0.1
+  MAX_SCALE: 2.0
+  DEPTH_DIR: "/scratch2/pr65/anur0018/tree_classification/data/rainforests/depth_960"
+
+SOLVER:
+  IMS_PER_BATCH: 2
+  BASE_LR: 0.00005
+  MAX_ITER: 75000
+  STEPS: (60000, 70000)
+  WARMUP_ITERS: 5000

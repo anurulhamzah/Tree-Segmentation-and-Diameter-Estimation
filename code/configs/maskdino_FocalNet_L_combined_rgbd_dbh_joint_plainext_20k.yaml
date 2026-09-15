@@ -1,0 +1,127 @@
+_BASE_: /scratch2/pr65/anur0018/MaskDINO/MaskDINO/configs/coco/instance-segmentation/Base-COCO-InstanceSegmentation.yaml
+
+# ==========================================================================
+# JOINT (seg + DBH) fine-tune — backbone TIDAK dibekukan. Dijalankan via
+# scripts/finetune_focal_dbh_joint.py (bukan finetune_focal_dbh.py yang frozen).
+# --------------------------------------------------------------------------
+# Init dari plain_ext20k (backbone segmentasi TERBAIK: test AP50=62,08%).
+# Loss segmentasi (mask/dice/class/box/giou) AKTIF bersama loss DBH (z-score
+# per-species via DBHNormCriterion). Tujuan: uji joint vs frozen dgn HEAD &
+# KRITERION IDENTIK — satu-satunya variabel beda = freeze vs tidak.
+#
+# Perbedaan kunci dari config frozen (dbh_finetune_..._20k_lr1e3):
+#   - seg losses dihidupkan lagi (frozen mematikannya jadi 0)
+#   - DBH_WEIGHT=1.0 — DIKALIBRASI dari smoke test: loss di-log sudah ter-weight,
+#     total_loss = jumlahnya. Pada DBH_WEIGHT=5 → DBH menyumbang ~67% total loss
+#     (dominan, merusak segmentasi). Raw DBH-sum≈35, seg-sum≈79 → DBH_WEIGHT=1.0
+#     memberi DBH ~31% total loss: berpengaruh membentuk backbone TAPI segmentasi
+#     tetap mayoritas (lindungi backbone segmentasi yang sudah bagus). Ini KNOB
+#     utama joint — monitor val AP50 (jangan turun) + val DBH R2 (naik).
+#   - BACKBONE_MULTIPLIER=1.0, BASE_LR=4e-5 (fine-tune), backbone trainable.
+# ==========================================================================
+
+SEED: 3121
+
+MODEL:
+  META_ARCHITECTURE: "MaskDINO"
+  WEIGHTS: ""    # diisi via --model-weights (plain_ext20k/model_final.pth)
+  BACKBONE:
+    NAME: "D2FocalNet"
+  FOCAL:
+    modelname: "focalnet_L_384_22k"
+    out_features: ["res2", "res3", "res4", "res5"]
+    in_chans: 4
+  PIXEL_MEAN: [ 123.675, 116.280, 103.530, 118.1 ]
+  PIXEL_STD:  [ 58.395, 57.120, 57.375, 50.8 ]
+  SEM_SEG_HEAD:
+    NAME: "MaskDINOHead"
+    IGNORE_VALUE: 255
+    NUM_CLASSES: 13
+    LOSS_WEIGHT: 1.0
+    CONVS_DIM: 256
+    MASK_DIM: 256
+    NORM: "GN"
+    PIXEL_DECODER_NAME: "MaskDINOEncoder"
+    DIM_FEEDFORWARD: 2048
+    NUM_FEATURE_LEVELS: 4
+    TOTAL_NUM_FEATURE_LEVELS: 5
+    IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    COMMON_STRIDE: 4
+    TRANSFORMER_ENC_LAYERS: 6
+    FEATURE_ORDER: "low2high"
+  MaskDINO:
+    TRANSFORMER_DECODER_NAME: "MaskDINODecoder"
+    DEEP_SUPERVISION: True
+    NO_OBJECT_WEIGHT: 0.1
+    CLASS_WEIGHT: 4.0      # seg AKTIF (kontras dgn frozen yang 0)
+    MASK_WEIGHT: 5.0
+    DICE_WEIGHT: 5.0
+    BOX_WEIGHT: 5.0
+    GIOU_WEIGHT: 2.0
+    DBH_WEIGHT: 1.0        # dikalibrasi dari smoke test (~31% total loss); lihat header
+    HIDDEN_DIM: 256
+    NUM_OBJECT_QUERIES: 300
+    NHEADS: 8
+    DROPOUT: 0.0
+    DIM_FEEDFORWARD: 2048
+    ENC_LAYERS: 0
+    PRE_NORM: False
+    ENFORCE_INPUT_PROJ: False
+    SIZE_DIVISIBILITY: 32
+    DEC_LAYERS: 9
+    TRAIN_NUM_POINTS: 12544
+    OVERSAMPLE_RATIO: 3.0
+    IMPORTANCE_SAMPLE_RATIO: 0.75
+    EVAL_FLAG: 1
+    INITIAL_PRED: True
+    TWO_STAGE: True
+    DN: "seg"
+    DN_NUM: 100
+    INITIALIZE_BOX_TYPE: 'bitmask'
+    BOX_LOSS: True
+    TEST:
+      SEMANTIC_ON: False
+      INSTANCE_ON: True
+      PANOPTIC_ON: False
+      OVERLAP_THRESHOLD: 0.8
+      OBJECT_MASK_THRESHOLD: 0.25
+
+DATASETS:
+  TRAIN: ("combined_inst_rle_f1000_repaired_v4_stratified_train",)
+  TEST:  ("combined_inst_rle_f1000_repaired_v4_stratified_val",)
+
+INPUT:
+  IMAGE_SIZE: 640
+  MASK_FORMAT: "bitmask"
+  MIN_SCALE: 0.4
+  MAX_SCALE: 2.0
+  FORMAT: "RGB"
+  DATASET_MAPPER_NAME: "coco_instance_lsj_dbh"
+  USE_DEPTH: True
+  DEPTH_DIR: "/scratch2/pr65/anur0018/tree_classification/data/combined/depth_pfm"
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.00004          # fine-tune backbone/decoder (dbh_embed di-override 1e-3 di skrip)
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 2500
+  WEIGHT_DECAY: 0.05
+  OPTIMIZER: "ADAMW"
+  BACKBONE_MULTIPLIER: 1.0
+  CLIP_GRADIENTS:
+    ENABLED: True
+    CLIP_TYPE: "full_model"
+    CLIP_VALUE: 0.01
+    NORM_TYPE: 2.0
+  AMP:
+    ENABLED: False
+
+TEST:
+  EVAL_PERIOD: 2500
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

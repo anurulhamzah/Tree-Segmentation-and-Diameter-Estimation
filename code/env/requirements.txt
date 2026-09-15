@@ -1,0 +1,14 @@
+git+https://github.com/facebookresearch/detectron2.git
+opencv-python
+scipy
+shapely
+timm
+fairscale
+einops
+cython
+pycocotools
+submitit
+scikit-image
+pandas
+matplotlib
+tqdm

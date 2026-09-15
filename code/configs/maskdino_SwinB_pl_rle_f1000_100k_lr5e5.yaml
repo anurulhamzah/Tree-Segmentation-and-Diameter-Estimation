@@ -1,0 +1,4 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/maskdino_SwinB_pl_rle_f1000_100k.yaml
+
+SOLVER:
+  BASE_LR: 0.00005

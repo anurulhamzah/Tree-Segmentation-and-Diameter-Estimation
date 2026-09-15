@@ -1,0 +1,23 @@
+_BASE_: /scratch2/pr65/anur0018/tree_classification/configs/maskdino_R50_full_inst_f1000_50k.yaml
+
+MODEL:
+  SEM_SEG_HEAD:
+    NUM_CLASSES: 6
+
+DATASETS:
+  TRAIN: ("rainforests_inst_rle_f100_train",)
+  TEST:  ("rainforests_inst_rle_f100_val",)
+
+INPUT:
+  IMAGE_SIZE: 640
+  MASK_FORMAT: "bitmask"
+
+SOLVER:
+  BASE_LR: 0.0001
+  MAX_ITER: 5000
+  STEPS: (3500, 4750)
+  WARMUP_ITERS: 200
+  CHECKPOINT_PERIOD: 5000
+
+TEST:
+  EVAL_PERIOD: 5000

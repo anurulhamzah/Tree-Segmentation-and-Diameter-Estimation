@@ -1,0 +1,33 @@
+_BASE_: maskdino_FocalNet_L_combined_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k.yaml
+
+# ==========================================================================
+# KONTROL base-plain-155k — FROM SCRATCH, RGBD, PLAIN (tanpa mosaic/noobj/
+# classweight), retrain PENUH dari iterasi 0 (BUKAN lanjutan plain135k).
+# --------------------------------------------------------------------------
+# Tujuan ilmiah: kelanjutan metodologis MURNI dari plain135k — satu jadwal LR
+# kontinu meluruh (TANPA restart sama sekali), diperpanjang dari 135k ke 155k
+# agar iterasi-matched PERSIS dengan classweight_20k/control20k (75k+20k+20k+
+#20k+20k=155k). Retrain dari nol WAJIB (bukan resume): STEPS diskalakan
+# proporsional terhadap MAX_ITER (60000/70000 dari basis 75k -> 124000/144667
+# untuk 155k) sehingga BENTUK KURVA LR dari iterasi ke-1 berbeda dari
+# plain135k — checkpoint plain135k iterasi X TIDAK equivalen dengan checkpoint
+# run ini di iterasi X.
+#
+# Pertanyaan yang dijawab: apakah BUDGET ITERASI SAJA (skema paling sederhana,
+# tanpa restart, tanpa augmentasi, tanpa reweighting) sudah cukup menyamai
+# performa classweight_20k (test AP50=61,17%, model terbaik saat ini)?
+#   - plain135k (135k, setara noobj05_20k) sudah plateau & val AP50-nya (64,14%)
+#     SUDAH melampaui val AP50 classweight_20k/control20k (155k, 63,77%/63,68%)
+#     meski iterasi lebih sedikit — sinyal kuat budget iterasi murni sudah cukup.
+#   - Run ini mengonfirmasi apakah sinyal itu bertahan sampai iterasi TOTAL yang
+#     benar-benar sama (155k), bukan ekstrapolasi dari plateau 135k.
+#
+# Dilatih via scripts/train_combined.py (skrip PLAIN, bukan mosaic/classweight).
+# Companion: plain_ext20k (lanjutan 135k+restart 20k TANPA konten baru) menguji
+# pertanyaan berbeda — apakah restart LR sendirian (tanpa retrain penuh) sudah
+# cukup mendorong performa serupa.
+# ==========================================================================
+
+SOLVER:
+  MAX_ITER: 155000
+  STEPS: (124000, 144667)

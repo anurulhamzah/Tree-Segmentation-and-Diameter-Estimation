@@ -1,0 +1,16 @@
+# FocalNet-L Combined RGBD repaired — MOSAIC crowd-aug FINETUNE dari best ckpt (iter 64999).
+# Tujuan: atasi under-detection scene padat (mosaic 2x2 ~5x instance/gambar).
+# Eval tetap pakai depth (DATASET_MAPPER_NAME coco_instance_lsj_dbh; mosaic hanya di train loader via MOSAIC_PROB).
+_BASE_: maskdino_FocalNet_L_combined_rle_f1000_rgbd_scratch_repaired_75k.yaml
+MODEL:
+  WEIGHTS: "/scratch2/pr65/anur0018/maskdino_output/FocalNet_L_combined_rle_f1000_rgbd_scratch_repaired_75k/model_0064999.pth"
+INPUT:
+  MOSAIC_PROB: 0.5
+SOLVER:
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000

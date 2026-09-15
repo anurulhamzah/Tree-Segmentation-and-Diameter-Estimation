@@ -1,0 +1,22 @@
+_BASE_: maskdino_FocalNet_L_combined_rle_f1000_rgbd_scratch_repaired_v4_stratified_75k.yaml
+
+# ==========================================================================
+# KONTROL base-plain-135k — FROM SCRATCH, RGBD, PLAIN (tanpa mosaic/noobj/classweight)
+# --------------------------------------------------------------------------
+# Tujuan ilmiah: mengisolasi "iterasi/jadwal" dari "augmentasi".
+# Ini IDENTIK dengan base 75k (WEIGHTS='', warmup 5000, AMP off, backbone_mult 1.0,
+# NO_OBJECT_WEIGHT 0.1, TANPA MOSAIC, TANPA PER_CLASS_WEIGHT) — satu-satunya beda:
+# anggaran iterasi diperpanjang 75k -> 135k dengan jadwal LR yang sama bentuknya
+# (STEPS diskalakan proporsional: 60000/70000 dari 75k -> 108000/126000 dari 135k).
+#
+# Pertanyaan yang dijawab: apakah base plain dengan iterasi LEBIH BANYAK saja sudah
+# cukup mencapai performa staged 135k (test segm AP50 = 60.02%), ATAU augmentasi
+# (mosaic+noobj) memang esensial?
+#   - Jika ~60% -> gain 75k->135k murni dari iterasi/jadwal, augmentasi tak perlu.
+#   - Jika ~57% (mentok di base) -> augmentasi/warm-restart memang yang mendorong.
+# Dilatih via scripts/train_combined.py (skrip PLAIN, bukan mosaic/classweight).
+# ==========================================================================
+
+SOLVER:
+  MAX_ITER: 135000
+  STEPS: (108000, 126000)

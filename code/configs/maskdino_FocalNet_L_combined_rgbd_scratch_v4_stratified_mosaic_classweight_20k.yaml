@@ -1,0 +1,28 @@
+# Stage 4 (eksperimen) — Finetune dari mosaic_noobj05_20k (model terbaik saat ini, test AP50=60.02%
+# F1@.35=63.01%): tambahkan per-class segmentation loss reweighting (broad, semua 13 kelas,
+# sqrt-inverse-frequency dari jumlah instance train, mean-normalized ke 1.0, TANPA cap tambahan).
+# Formula: w_i = (1/sqrt(n_i)) / mean_j(1/sqrt(n_j)). Dipilih sqrt (bukan inverse murni) krn inverse
+# murni menghasilkan rentang 70x (BangaloPalm 0.058 vs Pomegranate 4.08) yang berisiko instabilitas
+# loss klasifikasi; sqrt menekan ke rentang 8.4x (masih monoton inverse-frekuensi, lebih stabil).
+# HIPOTESIS DIUJI: apakah reweighting broad membantu 4 kelas RF terlemah (LeechVine/Umbrella/
+# AliiFig/RubberFig)? Analisis korelasi sebelumnya (project-per-class-ap-weighting-analysis)
+# menyarankan TIDAK (korelasi AP vs jumlah data = -0.33), karena kelas2 tsb dapat weight RENDAH
+# (0.44-0.52, di bawah rata2) sementara weight tertinggi jatuh ke kelas PL langka yang sudah AP
+# tinggi (Pomegranate 2.47, Lemon/Persimmon ~1.85). Eksperimen ini akan mengonfirmasi/membantah itu.
+_BASE_: maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_mosaic_noobj05_20k.yaml
+MODEL:
+  WEIGHTS: "/scratch2/pr65/anur0018/maskdino_output/FocalNet_L_combined_rgbd_scratch_v4_stratified_mosaic_noobj05_20k/model_final.pth"
+  MaskDINO:
+    # Urutan CLASS_NAMES (register_combined.py):
+    # Apple, Lemon, Loquat, Mango, Orange, Persimmon, Pomegranate, AliiFig, BangaloPalm, Fern, LeechVine, RubberFig, Umbrella
+    PER_CLASS_WEIGHT: [0.709, 1.854, 1.023, 1.803, 0.578, 1.850, 2.465, 0.522, 0.293, 0.571, 0.443, 0.460, 0.429]
+INPUT:
+  MOSAIC_PROB: 0.5
+SOLVER:
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000

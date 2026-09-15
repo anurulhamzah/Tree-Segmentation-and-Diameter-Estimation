@@ -1,0 +1,14 @@
+_BASE_: maskdino_FocalNet_L_combined_rgbd_scratch_v4_stratified_plain_ext20k.yaml
+
+# ==========================================================================
+# VALIDASI MULTI-SEED — plain_ext20k_seed3 (SEED 3121 -> 5417)
+# --------------------------------------------------------------------------
+# IDENTIK dengan plain_ext20k (resume dari checkpoint plain135k YANG SAMA, LR
+# restart 4e-5 20k, TANPA mosaic/noobj/classweight) — SATU-SATUNYA beda: SEED.
+# Seed ke-3 (bersama plain_ext20k asli SEED 3121 dan _seed2 SEED 9273) memberi
+# 3 titik data utk estimasi mean +/- SD test AP50 plain_ext20k, sejajar dgn
+# protokol DBH Sandbox Fase C (3 seed). Konfirmasi apakah keunggulan plain_ext20k
+# (62,08%) stabil, memperkuat rekomendasi backbone DBH.
+# ==========================================================================
+
+SEED: 5417

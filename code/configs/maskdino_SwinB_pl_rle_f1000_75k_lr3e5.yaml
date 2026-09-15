@@ -1,0 +1,27 @@
+_BASE_: maskdino_SwinB_plantations.yaml
+
+SEED: 3121
+
+DATASETS:
+  TRAIN: ("plantations_inst_rle_f1000_train",)
+  TEST:  ("plantations_inst_rle_f1000_val",)
+
+INPUT:
+  MASK_FORMAT: "bitmask"
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.00003
+  MAX_ITER: 75000
+  STEPS: (60000, 70000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+  AMP:
+    ENABLED: True
+
+TEST:
+  EVAL_PERIOD: 5000
+
+DATALOADER:
+  NUM_WORKERS: 8
+  FILTER_EMPTY_ANNOTATIONS: True

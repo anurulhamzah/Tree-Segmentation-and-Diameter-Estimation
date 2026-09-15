@@ -1,0 +1,18 @@
+# Finetune dari NO_OBJECT-final (model terbaik): tambah copy-paste crowd-aug pada SKALA ASLI
+# (beda mosaic yang menyusutkan 1/4). Mosaic dimatikan agar efek copy-paste terisolasi.
+# NO_OBJECT_WEIGHT 0.05 diwarisi dari base.
+_BASE_: maskdino_FocalNet_L_combined_rgbd_repaired_mosaic_noobj05_20k.yaml
+MODEL:
+  WEIGHTS: "/scratch2/pr65/anur0018/maskdino_output/FocalNet_L_combined_rgbd_repaired_mosaic_noobj05_20k/model_final.pth"
+INPUT:
+  MOSAIC_PROB: 0.0
+  COPY_PASTE_PROB: 0.5
+  COPY_PASTE_MAX_DONORS: 2
+SOLVER:
+  BASE_LR: 0.00004
+  MAX_ITER: 20000
+  STEPS: (12000, 18000)
+  WARMUP_ITERS: 1000
+  CHECKPOINT_PERIOD: 5000
+TEST:
+  EVAL_PERIOD: 5000
